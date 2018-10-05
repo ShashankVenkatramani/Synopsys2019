@@ -1,3 +1,14 @@
+'''
+
+NOT COMPLETE
+NOT COMPLETE
+NOT COMPLETE
+NOT COMPLETE
+
+NEED TO UPDATE
+
+'''
+
 from __future__ import print_function
 import numpy as np
 import tensorflow as tf
@@ -29,39 +40,39 @@ INPUT_FRAME_SIZE = 299
 def generate_arrays(train_filename, batch_size, max_sample, new_size):
     batch_features = np.zeros((batch_size, new_size, new_size, 3))
     batch_labels = np.zeros((batch_size,1))
-    
+
     current_sample_idx = 0
     combined_num = 0
-   
+
 
     print('GENERATOR: Train file = {}, batch = {}, total samples = {}'.format(train_filename,  batch_size, max_sample))
     while 1:
         reached_end = False
         start_idx = current_sample_idx
         end_idx = batch_size + start_idx
-        
+
         if (end_idx > max_sample):
             end_idx = batch_size
             reached_end = True
-        
-        print('GENERATOR: Start idx = {}, end_idx = {}, total samples = {}'.format(start_idx,  end_idx, max_sample))    
+
+        print('GENERATOR: Start idx = {}, end_idx = {}, total samples = {}'.format(start_idx,  end_idx, max_sample))
         x = HDF5Matrix(train_filename, 'data', start=start_idx, end=end_idx)
         y = HDF5Matrix(train_filename, 'labels', start=start_idx, end=end_idx)
         x = np.array(x)
         y = np.array(y)
         y = np_utils.to_categorical(y, NUMBER_OF_CLASSES)
-        
+
         current_sample_idx = end_idx
         if reached_end:
             current_sample_idx = 0
-        
+
         print("Shapes. x = {}, y = {}".format(x.shape, y.shape))
         #batch_labels = np_utils.to_categorical(batch_labels, NUMBER_OF_CLASSES)
         yield(x,y)
-        
-        
-        
-        
+
+
+
+
 variant1 = ['set1_{}.h5'.format(INPUT_FRAME_SIZE), 'set2_{}.h5'.format(INPUT_FRAME_SIZE)]
 variant2 = ['set2_{}.h5'.format(INPUT_FRAME_SIZE), 'set1_{}.h5'.format(INPUT_FRAME_SIZE)]
 variant3 = ['set3_{}.h5'.format(INPUT_FRAME_SIZE), 'set4_{}.h5'.format(INPUT_FRAME_SIZE)]
@@ -77,40 +88,40 @@ for num_variant in range(len(variants)):
 
     TRAIN_SET = DATASET_COMMON_FOLDER + variants[num_variant][0]
     TEST_SET = DATASET_COMMON_FOLDER + variants[num_variant][1]
-    
+
     print('Workings with sets: {} and {}'.format(TRAIN_SET, TEST_SET))
-    
-    
+
+
     # Load dataset
-    
+
     x_train = []
     y_tr = HDF5Matrix(TRAIN_SET, 'labels')
     x_train = HDF5Matrix(TRAIN_SET, 'data')
     x_train = np.array(x_train)
     y_tr = np.array(y_tr)
     x_tr = []
-    y_train = np_utils.to_categorical(y_tr, NUMBER_OF_CLASSES)  
-    
-    
+    y_train = np_utils.to_categorical(y_tr, NUMBER_OF_CLASSES)
+
+
     x_test = HDF5Matrix(TEST_SET, 'data')
     y_t = HDF5Matrix(TEST_SET, 'labels')
     x_test = np.array(x_test)
     y_t = np.array(y_t)
-    
-    
-    
-    
+
+
+
+
     total_samples_test = getNumSamples(variants[num_variant][1][0:4]+'.h5')
-    
+
     #x_test = np.zeros((total_samples_test, INPUT_FRAME_SIZE, INPUT_FRAME_SIZE, 3), dtype='float16')
     #y_test = np.zeros((total_samples_test,1), dtype='float16')
-   
-    y_test = np_utils.to_categorical(y_t, NUMBER_OF_CLASSES)  
+
+    y_test = np_utils.to_categorical(y_t, NUMBER_OF_CLASSES)
     print('Test dataset loaded')
-    
+
     print('Testing dataset size = ', x_test.shape)
     # Convert class vectors to binary class matrices
-    
+
     print('Loading model')
     # Create Inception V4 model
     model = inception_v4.create_model(num_classes=NUMBER_OF_CLASSES, dropout_keep_prob=0.2, weights=None)
@@ -120,22 +131,22 @@ for num_variant in range(len(variants)):
                   optimizer=rms_prop,
                   metrics=['accuracy', 'mse'])
     print("Model loaded and compiled")
-    
+
     # autosave best Model
     best_model_file = '{}_{}_{}_B{}_E{}_F{}.h5'.format(NET_NAME, TRAIN_SET[-11:-7], TEST_SET[-11:-7], BATCH_SIZE, EPOCHS, INPUT_FRAME_SIZE)
     best_model = ModelCheckpoint(best_model_file, monitor='val_loss', verbose=1, save_best_only=True)
-    
+
     print("*************************************")
     print("Fitting model")
     print("*************************************")
-    
+
     model.fit(x_train, y_train,
               batch_size=BATCH_SIZE,
               epochs=EPOCHS,
               verbose=1,
               callbacks=[best_model], # this callback can be de-activated
               validation_data=(x_test, y_test))
-      
+
 #     datagen = ImageDataGenerator(
 #             featurewise_center=False,  # set input mean to 0 over the dataset
 #             samplewise_center=False,  # set each sample mean to 0
@@ -147,11 +158,11 @@ for num_variant in range(len(variants)):
 #             height_shift_range=0,  # randomly shift images vertically (fraction of total height)
 #             horizontal_flip=False,  # randomly flip images
 #             vertical_flip=False)  # randomly flip images
-#      
+#
 #         # Compute quantities required for feature-wise normalization
 #         # (std, mean, and principal components if ZCA whitening is applied).
 #     datagen.fit(x_train)
-        
+
 #     total_samples_train = getNumSamples(variants[num_variant][0][0:4]+'.h5')
 #     model.fit_generator(generate_arrays(TRAIN_SET,
 #                                          batch_size=BATCH_SIZE,
@@ -166,23 +177,23 @@ for num_variant in range(len(variants)):
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
     print('All metrics', score)
-    
-    
-    
+
+
+
     #x_train = HDF5Matrix(TRAIN_SET, 'data')
     #y_train = HDF5Matrix(TRAIN_SET, 'labels')
-    
-    
+
+
     res = model.predict(x_test)
     res_label = np.argmax(res,1)
     print('\ntest:', sum(res_label==y_t)/float(len(y_t))*100)
-    
-    
+
+
     res = model.predict(x_train)
     res_label = np.argmax(res,1)
     print('train:', sum(res_label==y_tr)/float(len(y_tr))*100)
-    
-    
+
+
     print("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\nFixing the model file error")
     f = h5py.File(best_model_file, 'r+')
     del f['optimizer_weights']
@@ -197,14 +208,14 @@ for num_variant in range(len(variants)):
             del f['optimizer_weights']
 
 
-    
-    y_train = np_utils.to_categorical(y_tr, NUMBER_OF_CLASSES)  
-    
-    
-    
-    
 
-    
+    y_train = np_utils.to_categorical(y_tr, NUMBER_OF_CLASSES)
+
+
+
+
+
+
     print('result on best model')
     print('Loading the best model...')
     model = load_model(best_model_file)
@@ -233,13 +244,13 @@ for num_variant in range(len(variants)):
     del x_test
     del y_t
     gc.collect()
-     
+
     results_filename = '{}_{}_{}_B{}_E{}_F{}_test.txt'.format(NET_NAME, TRAIN_SET[-11:-7], TEST_SET[-11:-7], BATCH_SIZE, EPOCHS, INPUT_FRAME_SIZE)
     f = open(results_filename, 'wb')
     data = 'Test accuracy = {}'.format(acc_test)
     f.write(data)
-    f.close() 
-     
+    f.close()
+
     print('Loading labels')
     x_train_temp = HDF5Matrix(TRAIN_SET, 'data')
     print('Copying to Numpy array')
@@ -261,7 +272,7 @@ for num_variant in range(len(variants)):
     res_label = np.argmax(res,1)
     acc_train = sum(res_label==y_tr)/float(len(y_tr))*100
     print('train:', sum(res_label==y_tr)/float(len(y_tr))*100)
-      
+
     results_filename = '{}_{}_{}_B{}_E{}_F{}_train.txt'.format(NET_NAME, TRAIN_SET[-11:-7], TEST_SET[-11:-7], BATCH_SIZE, EPOCHS, INPUT_FRAME_SIZE)
     f = open(results_filename, 'wb')
     data = 'Train accuracy = {}'.format(acc_train)

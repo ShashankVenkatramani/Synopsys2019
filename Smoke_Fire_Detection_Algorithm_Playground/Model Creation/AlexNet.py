@@ -53,7 +53,7 @@ def AlexNet():
 def generate_arrays(train_filename, batch_size, max_sample, new_size):
     batch_features = np.zeros((batch_size, new_size, new_size, 3))
     batch_labels = np.zeros((batch_size,1))
-    
+
     current_sample_idx = 0
     combined_num = 0
 
@@ -62,29 +62,29 @@ def generate_arrays(train_filename, batch_size, max_sample, new_size):
         reached_end = False
         start_idx = current_sample_idx
         end_idx = batch_size + start_idx
-        
+
         if (end_idx > max_sample):
             end_idx = batch_size
             reached_end = True
-        
-        print('GENERATOR: Start idx = {}, end_idx = {}, total samples = {}'.format(start_idx,  end_idx, max_sample))    
+
+        print('GENERATOR: Start idx = {}, end_idx = {}, total samples = {}'.format(start_idx,  end_idx, max_sample))
         x = HDF5Matrix(train_filename, 'data', start=start_idx, end=end_idx)
         y = HDF5Matrix(train_filename, 'labels', start=start_idx, end=end_idx)
         x = np.array(x)
         y = np.array(y)
         y = np_utils.to_categorical(y, NUMBER_OF_CLASSES)
-        
+
         current_sample_idx = end_idx
         if reached_end:
             current_sample_idx = 0
-        
+
         print("Shapes. x = {}, y = {}".format(x.shape, y.shape))
-        
+
         #batch_labels = np_utils.to_categorical(batch_labels, NUMBER_OF_CLASSES)
         yield(x,y)
-        
-       
-       
+
+
+
 variant1 = ['set1_{}.h5'.format(INPUT_FRAME_SIZE), 'set2_{}.h5'.format(INPUT_FRAME_SIZE)]
 variant2 = ['set2_{}.h5'.format(INPUT_FRAME_SIZE), 'set1_{}.h5'.format(INPUT_FRAME_SIZE)]
 variant3 = ['set3_{}.h5'.format(INPUT_FRAME_SIZE), 'set4_{}.h5'.format(INPUT_FRAME_SIZE)]
@@ -100,9 +100,9 @@ for num_variant in range(len(variants)):
 
     TRAIN_SET = DATASET_COMMON_FOLDER + variants[num_variant][0]
     TEST_SET = DATASET_COMMON_FOLDER + variants[num_variant][1]
-    
+
     print('Workings with sets: {} and {}'.format(TRAIN_SET, TEST_SET))
-    
+
     # Load dataset
     x_tr = []
     x_tr = HDF5Matrix(TRAIN_SET, 'data')
@@ -111,19 +111,19 @@ for num_variant in range(len(variants)):
     x_train = np.array(x_tr)
     y_tr = np.array(y_tr)
     x_tr = []
-    y_train = np_utils.to_categorical(y_tr, NUMBER_OF_CLASSES)  
-    
+    y_train = np_utils.to_categorical(y_tr, NUMBER_OF_CLASSES)
+
     x_test = HDF5Matrix(TEST_SET, 'data')
     y_t = HDF5Matrix(TEST_SET, 'labels')
     x_test = np.array(x_test)
     y_t = np.array(y_t)
-    
+
     total_samples_test = getNumSamples(variants[num_variant][1][0:4]+'.h5')
-       
-    y_test = np_utils.to_categorical(y_t, NUMBER_OF_CLASSES)  
+
+    y_test = np_utils.to_categorical(y_t, NUMBER_OF_CLASSES)
     print('Test dataset loaded')
     print('Testing dataset size = ', x_test.shape)
-    
+
     print('Loading model')
     # Create model
     model = AlexNet()
@@ -133,42 +133,58 @@ for num_variant in range(len(variants)):
                   optimizer=rms_prop,
                   metrics=['accuracy', 'mse'])
     print("Model loaded and compiled")
-    
+
     # autosave best Model
     best_model_file = '{}_{}_{}_B{}_E{}_F{}.h5'.format(NET_NAME, TRAIN_SET[-11:-7], TEST_SET[-11:-7], BATCH_SIZE, EPOCHS, INPUT_FRAME_SIZE)
     best_model = ModelCheckpoint(best_model_file, monitor='val_loss', verbose=1, save_best_only=True)
-    
+
     print("*************************************")
     print("Fitting model")
     print("*************************************")
-    
+
+
+if (len(x_test) != len(y_test)):
+    max_len = min(len(x_test), len(y_test))
+    x_test = x_test[:max_len]
+    y_test = y_test[:max_len]
+    print("Different test sizes: ")
+    print(max_len)
+
+
+if (len(x_train) != len(y_train)):
+    max_len = min(len(x_train), len(y_train))
+    x_train = x_test[:max_len]
+    t_train = y_test[:max_len]
+    print("Different test sizes: ")
+    print(max_len)
+
     model.fit(x_train, y_train,
               batch_size=BATCH_SIZE,
               epochs=EPOCHS,
               verbose=1,
               callbacks=[best_model], # this callback can be de-activated
               validation_data=(x_test, y_test))
-  
+
     print("Finished fitting model")
     score = model.evaluate(x_test, y_test, verbose=1)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
     print('All metrics', score)
-    
+
     res = model.predict(x_test)
     res_label = np.argmax(res,1)
     print('\ntest:', sum(res_label==y_t)/float(len(y_t))*100)
-     
+
     res = model.predict(x_train)
     res_label = np.argmax(res,1)
     print('train:', sum(res_label==y_tr)/float(len(y_tr))*100)
-    
+
     print("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\nFixing the model file error")
     f = h5py.File(best_model_file, 'r+')
     del f['optimizer_weights']
     f.close()
     print("Done\n\n")
- 
+
     print('result on best model')
     print('Loading the best model...')
     model = load_model(best_model_file)
@@ -177,12 +193,12 @@ for num_variant in range(len(variants)):
     res_label = np.argmax(res,1)
     acc_test = sum(res_label==y_t)/float(len(y_t))*100
     print('test:', sum(res_label==y_t)/float(len(y_t))*100)
-     
+
     res = model.predict(x_train)
     res_label = np.argmax(res,1)
     acc_train = sum(res_label==y_tr)/float(len(y_tr))*100
     print('train:', sum(res_label==y_tr)/float(len(y_tr))*100)
-     
+
     results_filename = '{}_{}_{}_B{}_E{}_F{}.txt'.format(NET_NAME, TRAIN_SET[-11:-7], TEST_SET[-11:-7], BATCH_SIZE, EPOCHS, INPUT_FRAME_SIZE)
     f = open(results_filename, 'wb')
     data = 'Test accuracy = {}\r\nTrain accuracy = {}'.format(acc_test, acc_train)

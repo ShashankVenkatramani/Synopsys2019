@@ -31,7 +31,7 @@ from scipy import misc
 from AlexNet import y_tr, y_t
 
 # Parameters
-DATASET_COMMON_FOLDER = 'Datasets/Yuan/'
+DATASET_COMMON_FOLDER = 'Yuan/'
 NET_NAME = 'Xception'
 BATCH_SIZE = 10
 EPOCHS = 10
@@ -133,8 +133,8 @@ for num_variant in range(len(variants)):
     
     total_samples_test = getNumSamples(variants[num_variant][1][0:4]+'.h5')
     
-    #x_test = np.zeros((total_samples_test, INPUT_FRAME_SIZE, INPUT_FRAME_SIZE, 3), dtype='float16')
-    #y_test = np.zeros((total_samples_test,1), dtype='float16')
+    x_test = np.zeros((total_samples_test, INPUT_FRAME_SIZE, INPUT_FRAME_SIZE, 3), dtype='float16')
+    y_test = np.zeros((total_samples_test,1), dtype='float16')
    
     
     print('Test dataset loaded')
@@ -164,31 +164,31 @@ for num_variant in range(len(variants)):
               callbacks=[best_model], # this callback can be de-activated
               validation_data=(x_test, y_test))
       
-#     datagen = ImageDataGenerator(
-#             featurewise_center=False,  # set input mean to 0 over the dataset
-#             samplewise_center=False,  # set each sample mean to 0
-#             featurewise_std_normalization=False,  # divide inputs by std of the dataset
-#             samplewise_std_normalization=False,  # divide each input by its std
-#             zca_whitening=False,  # apply ZCA whitening
-#             rotation_range=0,  # randomly rotate images in the range (degrees, 0 to 180)
-#             width_shift_range=0,  # randomly shift images horizontally (fraction of total width)
-#             height_shift_range=0,  # randomly shift images vertically (fraction of total height)
-#             horizontal_flip=False,  # randomly flip images
-#             vertical_flip=False)  # randomly flip images
-#      
-#         # Compute quantities required for feature-wise normalization
-#         # (std, mean, and principal components if ZCA whitening is applied).
-#     datagen.fit(x_train)
+    datagen = ImageDataGenerator(
+            featurewise_center=False,  # set input mean to 0 over the dataset
+            samplewise_center=False,  # set each sample mean to 0
+            featurewise_std_normalization=False,  # divide inputs by std of the dataset
+            samplewise_std_normalization=False,  # divide each input by its std
+            zca_whitening=False,  # apply ZCA whitening
+            rotation_range=0,  # randomly rotate images in the range (degrees, 0 to 180)
+            width_shift_range=0,  # randomly shift images horizontally (fraction of total width)
+            height_shift_range=0,  # randomly shift images vertically (fraction of total height)
+            horizontal_flip=False,  # randomly flip images
+            vertical_flip=False)  # randomly flip images
+     
+        # Compute quantities required for feature-wise normalization
+        # (std, mean, and principal components if ZCA whitening is applied).
+    datagen.fit(x_train)
         
-#     total_samples_train = getNumSamples(variants[num_variant][0][0:4]+'.h5')
-#     model.fit_generator(generate_arrays(TRAIN_SET,
-#                                          batch_size=BATCH_SIZE,
-#                                          max_sample=total_samples_train,
-#                                          new_size=INPUT_FRAME_SIZE),
-#                         BATCH_SIZE, EPOCHS,
-#                         verbose=2,
-#                         callbacks=[best_model],
-#                         validation_data=(x_test, y_test))
+    total_samples_train = getNumSamples(variants[num_variant][0][0:4]+'.h5')
+    model.fit_generator(generate_arrays(TRAIN_SET,
+                                         batch_size=BATCH_SIZE,
+                                         max_sample=total_samples_train,
+                                         new_size=INPUT_FRAME_SIZE),
+                        BATCH_SIZE, EPOCHS,
+                        verbose=2,
+                        callbacks=[best_model],
+                        validation_data=(x_test, y_test))
     print("Finished fitting model")
     score = model.evaluate(x_test, y_test, verbose=1)
     print('Test loss:', score[0])
@@ -197,88 +197,88 @@ for num_variant in range(len(variants)):
     
     
     
-    #x_train = HDF5Matrix(TRAIN_SET, 'data')
-    #y_train = HDF5Matrix(TRAIN_SET, 'labels')
+    x_train = HDF5Matrix(TRAIN_SET, 'data')
+    y_train = HDF5Matrix(TRAIN_SET, 'labels')
     
     
-#     res = model.predict(x_test)
-#     res_label = np.argmax(res,1)
-#     print('\ntest:', sum(res_label==y_t)/float(len(y_t))*100)
-#     
-#     
-#     res = model.predict(x_train)
-#     res_label = np.argmax(res,1)
-#     print('train:', sum(res_label==y_tr)/float(len(y_tr))*100)
+    res = model.predict(x_test)
+    res_label = np.argmax(res,1)
+    print('\ntest:', sum(res_label==y_t)/float(len(y_t))*100)
     
     
-#     print("Update '{}'".format(best_model_file))
-#     with h5py.File(best_model_file, 'a') as f:
-#         if 'optimizer_weights' in f.keys():
-#             del f['optimizer_weights']
+    res = model.predict(x_train)
+    res_label = np.argmax(res,1)
+    print('train:', sum(res_label==y_tr)/float(len(y_tr))*100)
+    
+    
+    print("Update '{}'".format(best_model_file))
+    with h5py.File(best_model_file, 'a') as f:
+        if 'optimizer_weights' in f.keys():
+            del f['optimizer_weights']
 
     
     
     
-#     print('result on best model')
-#     print('Loading the best model...')
-#     model = load_model(best_model_file)
-#     print('Best Model loaded!')
-#     
-#     print('Loading test dataset')
-#     x_test_temp = HDF5Matrix(TEST_SET, 'data')
-#     print('Copying to Numpy array')
-#     x_test = np.array(x_test_temp)
-#     print('Deleting temp data')
-#     del x_test_temp
-#     print('GC!')
-#     gc.collect()
-#     print('Loading labels')
-#     y_t_temp = HDF5Matrix(TEST_SET, 'labels')
-#     print('Copying to Numpy array')
-#     y_t = np.array(y_t_temp)
-#     print('Deleting temp data')
-#     del y_t_temp
-#     print('GC!')
-#     gc.collect()
-#     print('Predicting')
-#     res = model.predict(x_test)
-#     res_label = np.argmax(res,1)
-#     acc_test = sum(res_label==y_t)/float(len(y_t))*100
-#     print('test:', sum(res_label==y_t)/float(len(y_t))*100)
-#     del x_test
-#     del y_t
-#     gc.collect()
-#      
-#     results_filename = '{}_{}_{}_B{}_E{}_F{}_test.txt'.format(NET_NAME, TRAIN_SET[-11:-7], TEST_SET[-11:-7], BATCH_SIZE, EPOCHS, INPUT_FRAME_SIZE)
-#     f = open(results_filename, 'wb')
-#     data = 'Test accuracy = {}'.format(acc_test)
-#     f.write(data)
-#     f.close() 
-#      
-#     print('Loading labels')
-#     x_train_temp = HDF5Matrix(TRAIN_SET, 'data')
-#     print('Copying to Numpy array')
-#     x_train = np.array(x_train_temp)
-#     print('Deleting temp data')
-#     del x_train_temp
-#     print('GC!')
-#     gc.collect()
-#     print('Loading labels')
-#     y_tr_temp = HDF5Matrix(TRAIN_SET, 'labels')
-#     print('Copying to Numpy array')
-#     y_tr = np.array(y_tr_temp)
-#     print('Deleting temp data')
-#     del y_tr_temp
-#     print('GC!')
-#     gc.collect()
-#     print('Predicting')
-#     res = model.predict(x_train)
-#     res_label = np.argmax(res,1)
-#     acc_train = sum(res_label==y_tr)/float(len(y_tr))*100
-#     print('train:', sum(res_label==y_tr)/float(len(y_tr))*100)
-#       
-#     results_filename = '{}_{}_{}_B{}_E{}_F{}_train.txt'.format(NET_NAME, TRAIN_SET[-11:-7], TEST_SET[-11:-7], BATCH_SIZE, EPOCHS, INPUT_FRAME_SIZE)
-#     f = open(results_filename, 'wb')
-#     data = 'Train accuracy = {}'.format(acc_train)
-#     f.write(data)
-#     f.close()
+    print('result on best model')
+    print('Loading the best model...')
+    model = load_model(best_model_file)
+    print('Best Model loaded!')
+    
+    print('Loading test dataset')
+    x_test_temp = HDF5Matrix(TEST_SET, 'data')
+    print('Copying to Numpy array')
+    x_test = np.array(x_test_temp)
+    print('Deleting temp data')
+    del x_test_temp
+    print('GC!')
+    gc.collect()
+    print('Loading labels')
+    y_t_temp = HDF5Matrix(TEST_SET, 'labels')
+    print('Copying to Numpy array')
+    y_t = np.array(y_t_temp)
+    print('Deleting temp data')
+    del y_t_temp
+    print('GC!')
+    gc.collect()
+    print('Predicting')
+    res = model.predict(x_test)
+    res_label = np.argmax(res,1)
+    acc_test = sum(res_label==y_t)/float(len(y_t))*100
+    print('test:', sum(res_label==y_t)/float(len(y_t))*100)
+    del x_test
+    del y_t
+    gc.collect()
+     
+    results_filename = '{}_{}_{}_B{}_E{}_F{}_test.txt'.format(NET_NAME, TRAIN_SET[-11:-7], TEST_SET[-11:-7], BATCH_SIZE, EPOCHS, INPUT_FRAME_SIZE)
+    f = open(results_filename, 'wb')
+    data = 'Test accuracy = {}'.format(acc_test)
+    f.write(data)
+    f.close() 
+     
+    print('Loading labels')
+    x_train_temp = HDF5Matrix(TRAIN_SET, 'data')
+    print('Copying to Numpy array')
+    x_train = np.array(x_train_temp)
+    print('Deleting temp data')
+    del x_train_temp
+    print('GC!')
+    gc.collect()
+    print('Loading labels')
+    y_tr_temp = HDF5Matrix(TRAIN_SET, 'labels')
+    print('Copying to Numpy array')
+    y_tr = np.array(y_tr_temp)
+    print('Deleting temp data')
+    del y_tr_temp
+    print('GC!')
+    gc.collect()
+    print('Predicting')
+    res = model.predict(x_train)
+    res_label = np.argmax(res,1)
+    acc_train = sum(res_label==y_tr)/float(len(y_tr))*100
+    print('train:', sum(res_label==y_tr)/float(len(y_tr))*100)
+      
+    results_filename = '{}_{}_{}_B{}_E{}_F{}_train.txt'.format(NET_NAME, TRAIN_SET[-11:-7], TEST_SET[-11:-7], BATCH_SIZE, EPOCHS, INPUT_FRAME_SIZE)
+    f = open(results_filename, 'wb')
+    data = 'Train accuracy = {}'.format(acc_train)
+    f.write(data)
+    f.close()

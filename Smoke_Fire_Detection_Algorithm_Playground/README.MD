@@ -4,3 +4,13 @@
 	- END GOAL : Find the origin of the fire in the current frame and bounding box it, also bounding box the smoke
 	- Explain logic behind why we look for the smoke first, then look for the fire (smoke bigger, etc…)
 	- Also implement detection of motion
+    
+    
+    
+# File States
+
+* Fire detection python notebook works.
+* Smoke detection python notebook does not.
+* Folder fill with old non functional code, saved for versioning and just in case
+* Model Creation folder
+    - Contains A TON of models I made for fun to test

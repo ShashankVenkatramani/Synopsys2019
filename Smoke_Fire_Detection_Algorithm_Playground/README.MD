@@ -9,8 +9,5 @@
     
 # File States
 
-* Fire detection python notebook works.
-* Smoke detection python notebook does not.
-* Folder fill with old non functional code, saved for versioning and just in case
-* Model Creation folder
-    - Contains A TON of models I made for fun to test
+* A LOT OF THE CODE WAS MOVED AROUND, MANY DATA DIRECTORIES NO LONGER FUNCTION IN THE CODE
+* CODE IS ORGANIZED BY DATE AND FUNCTIONALITY AS OF OCT 5 - 2018
